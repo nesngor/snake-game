@@ -37,6 +37,15 @@ python main.py
 | Menú: ↑ ↓ | Elegir opción |
 | Menú: ← → | Cambiar valor |
 
+En el celular (también funciona con el mouse):
+
+| Gesto | Acción |
+|---|---|
+| Deslizar | Mover la serpiente; en el menú, elegir opción (↑ ↓) y cambiar valor (← →) |
+| Tocar | Empezar / reintentar; durante el juego, pausa |
+| Pausa: tocar una opción | Continuar o volver al menú principal |
+| Fin del juego: deslizar | Volver al menú |
+
 ### Modos de dificultad
 
 - **CLASICO**: velocidad constante.

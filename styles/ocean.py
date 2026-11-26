@@ -514,6 +514,7 @@ class OceanRenderer(Renderer):
             box = self.glass((W // 2 - 190, H // 2 - 110, 380, 220))
             self.outlined("Pausa", self.font_big, (255, 255, 255), center=(W // 2, box.top + 52))
             for i, (s, sel) in enumerate(pause_items(app, ["Seguir nadando", "Menú principal"])):
+                self.mark_pause(i, box.top + 124 + i * 48)
                 self.outlined(s, self.font_mid, th["accent"] if sel else (255, 255, 255),
                               center=(W // 2, box.top + 124 + i * 48))
         elif g.state == "stage":

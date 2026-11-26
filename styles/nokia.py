@@ -232,6 +232,7 @@ class NokiaRenderer(Renderer):
             pygame.draw.rect(surf, FG, (26, 20, 68, 32), 1)
             draw_text_centered(surf, "PAUSA", 24)
             for i, (s, _) in enumerate(pause_items(app, ["SEGUIR", "MENU"])):
+                self.mark_pause(i, (36 + i * 8) * SCALE)
                 draw_text_centered(surf, s, 34 + i * 8)
         elif g.state == "dying":
             self.draw_field(surf, g, show_snake=(g.state_time // 150) % 2 == 0)

@@ -435,6 +435,7 @@ class DevRenderer(Renderer):
         for i, (s, kind) in enumerate(lines):
             self.text(s, self.f_code if kind != "big" else self.f_big,
                       th["text"] if kind == "big" else th[kind], topleft=(rect.left + 20, rect.top + 50 + i * 26))
+        return rect
 
     # ------------------------------------------------------------ frame completo
     def draw(self, app):
@@ -456,8 +457,10 @@ class DevRenderer(Renderer):
         hr = g.snake[0][1] + 1 if g.snake else 1
         if g.state == "pause":
             items = pause_items(app, ["Continuar (F5)", "Detener y volver al menu (Shift+F5)"])
-            self.dialog("|| Pausado en breakpoint", [(f"{lang['file']}, linea {hr}", "text"), ("", "dim")] +
-                        [(s, "warn" if sel else "dim") for s, sel in items], "warn")
+            box = self.dialog("|| Pausado en breakpoint", [(f"{lang['file']}, linea {hr}", "text"), ("", "dim")] +
+                              [(s, "warn" if sel else "dim") for s, sel in items], "warn")
+            for i in range(len(items)):
+                self.mark_pause(i, box.top + 50 + (2 + i) * 26 + 12)
         elif g.state == "stage":
             self.dialog("BUILD EXITOSO", [(f"{FOODS_PER_STAGE}/{FOODS_PER_STAGE} pruebas pasaron", "ok"),
                                           (f"$ git commit -m \"mapa {g.maze_idx}: {g.maze['name'].lower()}\"", "text"),

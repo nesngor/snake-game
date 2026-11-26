@@ -15,6 +15,8 @@ Datos utiles dentro de draw(app):
   app.menu_sel         fila seleccionada del menu
   app.opt(i)           indice elegido de la opcion i de este estilo
   pause_items(app)     opciones del menu de pausa (CONTINUAR / MENU PRINCIPAL)
+  self.mark_pause(i, y) llamalo al dibujar cada opcion de pausa (y = centro en px de
+                       pantalla) para que en el celular se pueda tocar
 """
 
 WIDTH, HEIGHT = 960, 576   # tamano de ventana comun a todos los estilos
@@ -54,6 +56,13 @@ class Renderer:
 
     def __init__(self, screen):
         self.screen = screen
+        self.pause_ys = []      # altura (px de pantalla) de cada opcion de pausa, para tocarlas
+
+    def mark_pause(self, i, y):
+        """Anota donde se dibujo la opcion i de la pausa (centro vertical en px de pantalla)."""
+        if i == 0:
+            self.pause_ys = []
+        self.pause_ys.append(y)
 
     def on_event(self, ev):
         pass

@@ -475,6 +475,7 @@ class AnimeRenderer(Renderer):
             box = self.panel(440, 260)
             self.outlined_text("PAUSA~", self.font_big, th["text"], width=4, center=(W // 2, box.top + 62))
             for i, (s, sel) in enumerate(pause_items(app)):
+                self.mark_pause(i, box.top + 140 + i * 52)
                 self.outlined_text(s, self.font_mid, th["accent"] if sel else (150, 140, 170), width=3,
                                    center=(W // 2, box.top + 140 + i * 52))
         elif g.state == "stage":

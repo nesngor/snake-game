@@ -476,6 +476,7 @@ class MuertosRenderer(Renderer):
             box = self.panel(400, 230)
             self.outlined("Pausa", self.font_big, th["text"], center=(W // 2, box.top + 54))
             for i, (s, sel) in enumerate(pause_items(app, ["Seguir jugando", "Menú principal"])):
+                self.mark_pause(i, box.top + 126 + i * 46)
                 self.outlined(s, self.font_mid, YELLOW if sel else th["text"],
                               center=(W // 2, box.top + 126 + i * 46))
         elif g.state == "stage":

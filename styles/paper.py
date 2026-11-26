@@ -505,6 +505,11 @@ class PaperRenderer(Renderer):
             self.sticky_note([("Pausa", self.font_huge, ink)] +
                              [(s, self.font_mid, (206, 46, 46) if sel else ink) for s, sel in items],
                              w=420, seed=3)
+            # misma cuenta que sticky_note: la nota va centrada en H//2 + 10
+            hh, mh = self.font_huge.get_height(), self.font_mid.get_height()
+            top = H // 2 + 10 - (60 + hh + 6 + 2 * (mh + 6) + 20) // 2
+            for i in range(len(items)):
+                self.mark_pause(i, top + 60 + hh + 6 + i * (mh + 6) + 6)
         elif g.state == "stage":
             ink = (60, 60, 70)
             self.sticky_note([("¡Mapa superado!", self.font_mid, (206, 46, 46)),

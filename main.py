@@ -9,6 +9,12 @@ Controles:
   P o ESC          pausa (en la pausa: arriba/abajo + Enter, o M = menu principal)
   Espacio / Enter  empezar / reintentar
   Menu: arriba/abajo elige opcion, izquierda/derecha cambia valor
+
+Celular (o mouse):
+  Deslizar         = flechas (mover / elegir y cambiar opciones del menu)
+  Tocar            = empezar / reintentar; durante el juego, pausa
+  En la pausa      tocar CONTINUAR o MENU PRINCIPAL
+  Fin del juego    deslizar = volver al menu
 """
 
 import asyncio
@@ -85,6 +91,63 @@ class Sounds:
                 self.bank[name].play()
         except Exception:
             pass
+
+
+# ---------------------------------------------------------------- tactil (celular)
+class Touch:
+    """Convierte dedo (o mouse) en gestos: deslizar = flecha, toque = Enter / elegir.
+
+    Los deslizamientos se detectan mientras el dedo se mueve (sin esperar a soltarlo),
+    asi se pueden encadenar giros sin levantar el dedo.
+    """
+    SWIPE = 36        # px de pantalla para contar como deslizamiento
+    TAP_MOVE = 18     # un toque no puede moverse mas que esto
+    TAP_MS = 450      # ni durar mas que esto
+
+    def __init__(self):
+        self.anchor = None     # donde empezo el tramo actual del deslizamiento
+        self.start = None      # donde se apoyo el dedo
+        self.t0 = 0
+        self.swiped = False
+
+    @staticmethod
+    def event_pos(event):
+        """(x, y) en px de pantalla, o None si el evento no es de dedo/mouse."""
+        if event.type in (pygame.FINGERDOWN, pygame.FINGERMOTION, pygame.FINGERUP):
+            return event.x * WIDTH, event.y * HEIGHT            # vienen normalizados 0..1
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP):
+            if getattr(event, "touch", False):                  # copia del dedo: ya se cuenta arriba
+                return None
+            if event.type != pygame.MOUSEMOTION and event.button != 1:
+                return None
+            return event.pos
+        return None
+
+    def handle(self, event, app):
+        pos = self.event_pos(event)
+        if pos is None:
+            return
+        if event.type in (pygame.FINGERDOWN, pygame.MOUSEBUTTONDOWN):
+            self.anchor = self.start = pos
+            self.t0 = pygame.time.get_ticks()
+            self.swiped = False
+        elif self.anchor is None:
+            return
+        elif event.type in (pygame.FINGERMOTION, pygame.MOUSEMOTION):
+            dx, dy = pos[0] - self.anchor[0], pos[1] - self.anchor[1]
+            if max(abs(dx), abs(dy)) >= self.SWIPE:
+                if abs(dx) > abs(dy):
+                    app.handle_swipe(RIGHT if dx > 0 else LEFT)
+                else:
+                    app.handle_swipe(DOWN if dy > 0 else UP)
+                self.anchor = pos
+                self.swiped = True
+        else:   # soltar
+            moved = max(abs(pos[0] - self.start[0]), abs(pos[1] - self.start[1]))
+            quick = pygame.time.get_ticks() - self.t0 <= self.TAP_MS
+            if not self.swiped and moved <= self.TAP_MOVE and quick:
+                app.handle_tap(*pos)
+            self.anchor = self.start = None
 
 
 # ---------------------------------------------------------------- app: menu + opciones
@@ -195,6 +258,31 @@ class App:
                 g.to_menu()
         return True
 
+    # --- gestos tactiles: se traducen a las mismas acciones que el teclado
+    def handle_swipe(self, d):
+        if self.game.state == "over":
+            self.game.to_menu()          # en la pantalla final, deslizar = volver al menu
+            return
+        key = {UP: pygame.K_UP, DOWN: pygame.K_DOWN, LEFT: pygame.K_LEFT, RIGHT: pygame.K_RIGHT}[d]
+        self.handle_key(key)
+
+    def handle_tap(self, x, y):
+        g = self.game
+        if g.state == "play":
+            self.pause()
+        elif g.state == "pause":
+            ys = self.renderer.pause_ys
+            if not ys:
+                self.handle_key(pygame.K_RETURN)
+                return
+            i = min(range(len(ys)), key=lambda k: abs(ys[k] - y))
+            gap = abs(ys[1] - ys[0]) if len(ys) > 1 else 50
+            if abs(ys[i] - y) <= gap * 0.75 and abs(x - WIDTH / 2) <= 300:
+                self.pause_sel = i
+                self.handle_key(pygame.K_RETURN)
+        else:
+            self.handle_key(pygame.K_RETURN)   # empezar / reintentar / saltar "mapa superado"
+
     def pause(self):
         if self.game.state == "play":
             self.pause_sel = 0          # siempre abre en CONTINUAR
@@ -209,6 +297,7 @@ async def main():
     clock = pygame.time.Clock()
     sounds = Sounds()
     app = App(screen)
+    touch = Touch()
 
     running = True
     while running:
@@ -222,6 +311,8 @@ async def main():
                 app.pause()             # pausa sola al cambiar de ventana
             elif event.type == pygame.KEYDOWN:
                 running = app.handle_key(event.key)
+            else:
+                touch.handle(event, app)
 
         app.game.update(dt)
         for ev in app.game.events:

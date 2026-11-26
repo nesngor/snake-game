@@ -465,6 +465,7 @@ class SpaceRenderer(Renderer):
             box = self.holo_panel((W // 2 - 220, H // 2 - 100, 440, 200))
             self.text("PAUSA", self.font_big, th["accent"], center=(W // 2, box.top + 48))
             for i, (s, sel) in enumerate(pause_items(app)):
+                self.mark_pause(i, box.top + 112 + i * 44)
                 self.text(s, self.font_mid, th["accent"] if sel else th["text"], glow=sel,
                           center=(W // 2, box.top + 112 + i * 44))
         elif g.state == "stage":

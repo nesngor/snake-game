@@ -508,6 +508,7 @@ class Cube3DRenderer(Renderer):
             box = self.panel(420, 240)
             self.text("PAUSA", self.font_big, th["accent"], False, center=(W // 2, box.top + 56))
             for i, (s, sel) in enumerate(pause_items(app)):
+                self.mark_pause(i, box.top + 130 + i * 50)
                 self.text(s, self.font_mid, th["accent"] if sel else dark, False,
                           center=(W // 2, box.top + 130 + i * 50))
         elif g.state == "stage":

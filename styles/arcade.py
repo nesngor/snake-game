@@ -282,6 +282,7 @@ class ArcadeRenderer(Renderer):
             if int(self.t * 2) % 2 == 0:
                 text_c(surf, "PAUSE", r.top + 8, YELLOW, 2)
             for i, (s, sel) in enumerate(pause_items(app, ["CONTINUE", "MAIN MENU"])):
+                self.mark_pause(i, (r.top + 34 + i * 14) * SCALE)
                 text_c(surf, s, r.top + 32 + i * 14, YELLOW if sel else WHITE)
         elif g.state == "stage":
             r = self.box(surf, (LW // 2 - 90, LH // 2 - 34, 180, 68), YELLOW)

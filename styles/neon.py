@@ -344,6 +344,7 @@ class NeonRenderer(Renderer):
             self.panel(420, 250)
             self.text("PAUSA", self.font_big, th["head"], center=(W // 2, H // 2 - 64))
             for i, (s, sel) in enumerate(pause_items(app)):
+                self.mark_pause(i, H // 2 + 16 + i * 50)
                 self.text(s, self.font_mid, th["head"] if sel else th["dim"],
                           center=(W // 2, H // 2 + 16 + i * 50))
         elif g.state == "stage":

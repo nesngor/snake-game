@@ -369,6 +369,7 @@ class PixelRenderer(Renderer):
             box = self.panel(surf, (60, 44, 120, 56))
             draw_text_centered(surf, "PAUSA", box.top + 7, TEXT_DARK, scale=2, outline=False)
             for i, (s, sel) in enumerate(pause_items(app)):
+                self.mark_pause(i, (box.top + 32 + i * 12) * SCALE)
                 draw_text_centered(surf, s, box.top + 30 + i * 12,
                                    (200, 40, 40) if sel else TEXT_DARK, outline=False)
         elif g.state == "stage":
