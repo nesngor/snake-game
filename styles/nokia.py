@@ -3,7 +3,7 @@
 import pygame
 
 from game import COLS, ROWS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer
+from styles.base import Renderer, pause_items
 
 LOGICAL_W, LOGICAL_H = 120, 72
 SCALE = 8
@@ -228,9 +228,11 @@ class NokiaRenderer(Renderer):
             self.draw_field(surf, g)
         elif g.state == "pause":
             self.draw_field(surf, g)
-            surf.fill(BG, (34, 30, 52, 13))
-            pygame.draw.rect(surf, FG, (34, 30, 52, 13), 1)
-            draw_text_centered(surf, "PAUSA", 34)
+            surf.fill(BG, (26, 20, 68, 32))
+            pygame.draw.rect(surf, FG, (26, 20, 68, 32), 1)
+            draw_text_centered(surf, "PAUSA", 24)
+            for i, (s, _) in enumerate(pause_items(app, ["SEGUIR", "MENU"])):
+                draw_text_centered(surf, s, 34 + i * 8)
         elif g.state == "dying":
             self.draw_field(surf, g, show_snake=(g.state_time // 150) % 2 == 0)
         elif g.state == "stage":

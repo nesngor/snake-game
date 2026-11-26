@@ -14,6 +14,7 @@ Datos utiles dentro de draw(app):
   app.menu_rows()      [(etiqueta, valor), ...] para dibujar el menu
   app.menu_sel         fila seleccionada del menu
   app.opt(i)           indice elegido de la opcion i de este estilo
+  pause_items(app)     opciones del menu de pausa (CONTINUAR / MENU PRINCIPAL)
 """
 
 WIDTH, HEIGHT = 960, 576   # tamano de ventana comun a todos los estilos
@@ -36,6 +37,14 @@ def smooth_runs(g):
         last = p
     runs.append(run)
     return runs
+
+
+def pause_items(app, labels=None):
+    """[(texto, seleccionada), ...] para el menu de pausa. La opcion elegida va entre > <.
+    labels permite que un estilo use sus propios textos (mismo orden que App.PAUSE_ROWS)."""
+    labels = labels or app.PAUSE_ROWS
+    return [(f"> {s} <" if i == app.pause_sel else s, i == app.pause_sel)
+            for i, s in enumerate(labels)]
 
 
 class Renderer:

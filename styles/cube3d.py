@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, MAZES, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
 
 HUD_H = 64                     # espacio arriba para el marcador
 RING = 0.4                     # grosor del muro perimetral
@@ -505,8 +505,11 @@ class Cube3DRenderer(Renderer):
 
         dark = (40, 44, 70)
         if g.state == "pause":
-            self.panel(320, 120)
-            self.text("PAUSA", self.font_big, th["accent"], False, center=(W // 2, H // 2))
+            box = self.panel(420, 240)
+            self.text("PAUSA", self.font_big, th["accent"], False, center=(W // 2, box.top + 56))
+            for i, (s, sel) in enumerate(pause_items(app)):
+                self.text(s, self.font_mid, th["accent"] if sel else dark, False,
+                          center=(W // 2, box.top + 130 + i * 50))
         elif g.state == "stage":
             box = self.panel(520, 240)
             self.text("MAPA SUPERADO!", self.font_mid, th["accent"], False,

@@ -30,7 +30,9 @@ python main.py
 | Tecla | Acción |
 |---|---|
 | Flechas / WASD | Mover |
-| P o ESC | Pausa |
+| P o ESC | Pausa (y continuar) |
+| Pausa: ↑ ↓ + Enter | Continuar o volver al menú principal |
+| Pausa: M | Volver al menú principal |
 | Espacio / Enter | Empezar / reintentar |
 | Menú: ↑ ↓ | Elegir opción |
 | Menú: ← → | Cambiar valor |

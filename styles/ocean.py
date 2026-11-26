@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -511,8 +511,11 @@ class OceanRenderer(Renderer):
             self.canvas.blit(pygame.transform.smoothscale(small, (W, H)), (0, 0), special_flags=pygame.BLEND_ADD)
 
         if g.state == "pause":
-            box = self.glass((W // 2 - 160, H // 2 - 55, 320, 110))
-            self.outlined("Pausa", self.font_big, (255, 255, 255), center=box.center)
+            box = self.glass((W // 2 - 190, H // 2 - 110, 380, 220))
+            self.outlined("Pausa", self.font_big, (255, 255, 255), center=(W // 2, box.top + 52))
+            for i, (s, sel) in enumerate(pause_items(app, ["Seguir nadando", "Menú principal"])):
+                self.outlined(s, self.font_mid, th["accent"] if sel else (255, 255, 255),
+                              center=(W // 2, box.top + 124 + i * 48))
         elif g.state == "stage":
             box = self.glass((W // 2 - 290, H // 2 - 110, 580, 220))
             self.outlined("¡Marea alta!", self.font_mid, th["accent"], center=(W // 2, box.top + 46))

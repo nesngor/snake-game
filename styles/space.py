@@ -8,7 +8,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -462,8 +462,11 @@ class SpaceRenderer(Renderer):
         self.apply_glow()
 
         if g.state == "pause":
-            box = self.holo_panel((W // 2 - 170, H // 2 - 50, 340, 100))
-            self.text("PAUSA", self.font_big, th["accent"], center=box.center)
+            box = self.holo_panel((W // 2 - 220, H // 2 - 100, 440, 200))
+            self.text("PAUSA", self.font_big, th["accent"], center=(W // 2, box.top + 48))
+            for i, (s, sel) in enumerate(pause_items(app)):
+                self.text(s, self.font_mid, th["accent"] if sel else th["text"], glow=sel,
+                          center=(W // 2, box.top + 112 + i * 44))
         elif g.state == "stage":
             box = self.holo_panel((W // 2 - 280, H // 2 - 100, 560, 200))
             self.text("SALTO HIPERESPACIAL", self.font_mid, th["warn"], center=(W // 2, box.top + 44))

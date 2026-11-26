@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, RIGHT
-from styles.base import Renderer, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96
@@ -500,8 +500,11 @@ class PaperRenderer(Renderer):
             self.draw_hud(g)
 
         if g.state == "pause":
-            self.sticky_note([("Pausa", self.font_huge, pal["ink"] if self.sheet["kind"] != "chalk"
-                               else (60, 60, 70))], w=360, seed=3)
+            ink = pal["ink"] if self.sheet["kind"] != "chalk" else (60, 60, 70)
+            items = pause_items(app, ["Seguir jugando", "Menú principal"])
+            self.sticky_note([("Pausa", self.font_huge, ink)] +
+                             [(s, self.font_mid, (206, 46, 46) if sel else ink) for s, sel in items],
+                             w=420, seed=3)
         elif g.state == "stage":
             ink = (60, 60, 70)
             self.sticky_note([("¡Mapa superado!", self.font_mid, (206, 46, 46)),

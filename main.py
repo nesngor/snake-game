@@ -6,7 +6,7 @@ Navegador:   python -m pygbag snake   (desde la carpeta padre)
 
 Controles:
   Flechas / WASD   mover
-  P o ESC          pausa
+  P o ESC          pausa (en la pausa: arriba/abajo + Enter, o M = menu principal)
   Espacio / Enter  empezar / reintentar
   Menu: arriba/abajo elige opcion, izquierda/derecha cambia valor
 """
@@ -90,6 +90,7 @@ class Sounds:
 # ---------------------------------------------------------------- app: menu + opciones
 class App:
     BASE_ROWS = ["ESTILO", "NIVEL", "MODO", "MAPA"]
+    PAUSE_ROWS = ["CONTINUAR", "MENU PRINCIPAL"]
 
     def __init__(self, screen):
         data = load_save()
@@ -112,6 +113,7 @@ class App:
                          record=clamp_int(data.get("record"), 0, 99999, 0),
                          mode=data.get("mode", "RAPIDO"))
         self.menu_sel = 0
+        self.pause_sel = 0      # 0 = CONTINUAR, 1 = MENU PRINCIPAL
 
     @property
     def renderer(self):
@@ -170,10 +172,19 @@ class App:
             if d:
                 g.turn(d)
             elif key in (pygame.K_p, pygame.K_ESCAPE):
-                g.pause()
+                self.pause()
         elif g.state == "pause":
-            if key in (pygame.K_p, pygame.K_ESCAPE) or key in start_keys:
+            if d in (UP, DOWN):
+                self.pause_sel = (self.pause_sel + d[1]) % len(self.PAUSE_ROWS)
+            elif key in start_keys:
+                if self.pause_sel == 0:
+                    g.resume()
+                else:
+                    g.to_menu()
+            elif key in (pygame.K_p, pygame.K_ESCAPE):
                 g.resume()
+            elif key == pygame.K_m:
+                g.to_menu()
         elif g.state == "stage":
             if key in start_keys:
                 g.load_stage()
@@ -181,8 +192,13 @@ class App:
             if key in start_keys:
                 g.start()
             elif key == pygame.K_ESCAPE:
-                g.set_state("menu")
+                g.to_menu()
         return True
+
+    def pause(self):
+        if self.game.state == "play":
+            self.pause_sel = 0          # siempre abre en CONTINUAR
+            self.game.pause()
 
 
 async def main():
@@ -196,10 +212,14 @@ async def main():
 
     running = True
     while running:
-        dt = clock.tick(60)
+        # tope al dt: si la ventana se congela (arrastrarla, cambiar de pestana)
+        # no se simulan de golpe decenas de pasos
+        dt = min(clock.tick(60), 100)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.WINDOWFOCUSLOST:
+                app.pause()             # pausa sola al cambiar de ventana
             elif event.type == pygame.KEYDOWN:
                 running = app.handle_key(event.key)
 

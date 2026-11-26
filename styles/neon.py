@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96                 # esquina del tablero
@@ -341,8 +341,11 @@ class NeonRenderer(Renderer):
 
         # paneles encima del brillo (para que se lean bien)
         if g.state == "pause":
-            self.panel(360, 140)
-            self.text("PAUSA", self.font_big, th["head"], center=(W // 2, H // 2))
+            self.panel(420, 250)
+            self.text("PAUSA", self.font_big, th["head"], center=(W // 2, H // 2 - 64))
+            for i, (s, sel) in enumerate(pause_items(app)):
+                self.text(s, self.font_mid, th["head"] if sel else th["dim"],
+                          center=(W // 2, H // 2 + 16 + i * 50))
         elif g.state == "stage":
             self.panel(520, 260)
             self.text("MAPA SUPERADO!", self.font_mid, th["bonus"], center=(W // 2, H // 2 - 80))

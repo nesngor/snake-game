@@ -64,6 +64,7 @@ class Game:
     def __init__(self, level=5, maze_idx=1, record=0, mode="RAPIDO"):
         self.level = level
         self.maze_idx = maze_idx
+        self.start_maze = maze_idx   # mapa elegido en el menu (next_stage cambia maze_idx)
         self.record = record
         self.mode = mode if mode in MODES else "RAPIDO"
         self.speed_mult = 1.0      # baja con cada comida (= mas rapido)
@@ -117,6 +118,11 @@ class Game:
 
     # --- partida
     def start(self):
+        # el mapa elegido en el menu es el inicial; al reintentar se vuelve a el
+        if self.state == "menu":
+            self.start_maze = self.maze_idx
+        else:
+            self.maze_idx = self.start_maze
         self.score = 0
         self.new_record = False
         self.speed_mult = 1.0      # la velocidad ganada se conserva entre mapas
@@ -144,6 +150,13 @@ class Game:
     def resume(self):
         if self.state == "pause":
             self.state = "play"
+
+    def to_menu(self):
+        """Abandona la partida y vuelve al menu con el mapa que se eligio alli."""
+        self.maze_idx = self.start_maze
+        self.rocks = []
+        self.bonus = None
+        self.set_state("menu")
 
     def move_fraction(self):
         """0..1: cuanto ha avanzado el tiempo hacia el siguiente paso (para animar)."""

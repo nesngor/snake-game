@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, WIDTH, HEIGHT
+from styles.base import Renderer, pause_items, WIDTH, HEIGHT
 from styles.nokia import FONT
 
 LW, LH = 240, 144
@@ -366,8 +366,11 @@ class PixelRenderer(Renderer):
 
         if g.state == "pause":
             self.dim(surf)
-            self.panel(surf, (80, 58, 80, 26))
-            draw_text_centered(surf, "PAUSA", 65, TEXT_DARK, scale=2, outline=False)
+            box = self.panel(surf, (60, 44, 120, 56))
+            draw_text_centered(surf, "PAUSA", box.top + 7, TEXT_DARK, scale=2, outline=False)
+            for i, (s, sel) in enumerate(pause_items(app)):
+                draw_text_centered(surf, s, box.top + 30 + i * 12,
+                                   (200, 40, 40) if sel else TEXT_DARK, outline=False)
         elif g.state == "stage":
             self.dim(surf)
             box = self.panel(surf, (50, 34, 140, 76))

@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -472,8 +472,11 @@ class AnimeRenderer(Renderer):
             self.draw_speed_lines()
 
         if g.state == "pause":
-            box = self.panel(360, 150)
-            self.outlined_text("PAUSA~", self.font_big, th["text"], width=4, center=box.center)
+            box = self.panel(440, 260)
+            self.outlined_text("PAUSA~", self.font_big, th["text"], width=4, center=(W // 2, box.top + 62))
+            for i, (s, sel) in enumerate(pause_items(app)):
+                self.outlined_text(s, self.font_mid, th["accent"] if sel else (150, 140, 170), width=3,
+                                   center=(W // 2, box.top + 140 + i * 52))
         elif g.state == "stage":
             box = self.panel(540, 250)
             self.outlined_text("SUGOI!! MAPA SUPERADO", self.font_mid, th["accent"], width=3,

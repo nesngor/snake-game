@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, FOODS_PER_STAGE, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 CELL = 30
@@ -455,8 +455,9 @@ class DevRenderer(Renderer):
 
         hr = g.snake[0][1] + 1 if g.snake else 1
         if g.state == "pause":
-            self.dialog("|| Pausado en breakpoint", [(f"{lang['file']}, linea {hr}", "text"),
-                                                     ("Presiona P para continuar (F5)", "dim")], "warn")
+            items = pause_items(app, ["Continuar (F5)", "Detener y volver al menu (Shift+F5)"])
+            self.dialog("|| Pausado en breakpoint", [(f"{lang['file']}, linea {hr}", "text"), ("", "dim")] +
+                        [(s, "warn" if sel else "dim") for s, sel in items], "warn")
         elif g.state == "stage":
             self.dialog("BUILD EXITOSO", [(f"{FOODS_PER_STAGE}/{FOODS_PER_STAGE} pruebas pasaron", "ok"),
                                           (f"$ git commit -m \"mapa {g.maze_idx}: {g.maze['name'].lower()}\"", "text"),

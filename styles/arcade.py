@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
 from styles.nokia import FONT
 
 LW, LH = 320, 192
@@ -278,9 +278,11 @@ class ArcadeRenderer(Renderer):
             self.draw_field(surf, g)
 
         if g.state == "pause":
-            self.box(surf, (LW // 2 - 40, LH // 2 - 14, 80, 28), CYAN)
+            r = self.box(surf, (LW // 2 - 70, LH // 2 - 32, 140, 64), CYAN)
             if int(self.t * 2) % 2 == 0:
-                text_c(surf, "PAUSE", LH // 2 - 5, YELLOW, 2)
+                text_c(surf, "PAUSE", r.top + 8, YELLOW, 2)
+            for i, (s, sel) in enumerate(pause_items(app, ["CONTINUE", "MAIN MENU"])):
+                text_c(surf, s, r.top + 32 + i * 14, YELLOW if sel else WHITE)
         elif g.state == "stage":
             r = self.box(surf, (LW // 2 - 90, LH // 2 - 34, 180, 68), YELLOW)
             text_c(surf, "STAGE CLEAR!", r.top + 8, TITLE_BANDS, 2)

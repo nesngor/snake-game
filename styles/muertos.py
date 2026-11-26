@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -473,8 +473,11 @@ class MuertosRenderer(Renderer):
             self.draw_hud(g)
 
         if g.state == "pause":
-            box = self.panel(340, 120)
-            self.outlined("Pausa", self.font_big, th["text"], center=box.center)
+            box = self.panel(400, 230)
+            self.outlined("Pausa", self.font_big, th["text"], center=(W // 2, box.top + 54))
+            for i, (s, sel) in enumerate(pause_items(app, ["Seguir jugando", "Menú principal"])):
+                self.outlined(s, self.font_mid, YELLOW if sel else th["text"],
+                              center=(W // 2, box.top + 126 + i * 46))
         elif g.state == "stage":
             box = self.panel(560, 230)
             self.outlined("¡Ofrenda completa!", self.font_mid, YELLOW, center=(W // 2, box.top + 50))
