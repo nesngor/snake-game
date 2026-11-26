@@ -2,6 +2,8 @@
 
 Snake hecho con Pygame (pygame-ce), con **11 estilos visuales**, 7 mapas, modos de dificultad y versión web.
 
+🎮 **Juega en línea:** https://nesngor.github.io/snake-game/
+
 ## Estilos
 
 | Estilo | Descripción | Opciones propias |
@@ -52,6 +54,8 @@ python -m pygbag --archive snake-game  # genera build/web.zip para publicar
 ```
 
 La versión web descarga el motor de Python desde `pygame-web.github.io`, así que necesita internet.
+
+Cada push a `main` la compila y la publica en GitHub Pages automáticamente (`.github/workflows/pages.yml`).
 
 ## Estructura
 
