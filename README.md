@@ -1,6 +1,6 @@
 # snake-game
 
-Snake hecho con Pygame (pygame-ce), con **11 estilos visuales**, 7 mapas, modos de dificultad y versión web.
+Snake hecho con Pygame (pygame-ce), con **14 estilos visuales**, 7 mapas, modos de dificultad y versión web.
 
 🎮 **Juega en línea:** https://nesngor.github.io/snake-game/
 
@@ -19,6 +19,9 @@ Snake hecho con Pygame (pygame-ce), con **11 estilos visuales**, 7 mapas, modos 
 | **ESPACIO** | Cometa entre planetas y asteroides, salto hiperespacial | Sector, Cometa |
 | **MUERTOS** | Día de Muertos: alebrije, papel picado, talavera y calaveritas | Ambiente, Ofrenda |
 | **OCEANO** | Serpiente marina entre corales, peces y cofre del tesoro | Agua (incluye Abismo bioluminiscente), Criatura |
+| **PLASTILINA** | Todo modelado en plastilina con huellas, sombras y temblor de stop-motion; al morir queda aplastada | Mesa (tapete de corte, madera, cartón), Color (verde, arcoíris, rayas) |
+| **VITRAL** | Ventana de catedral: vidrio emplomado, rayos de luz y una serpiente de joyas que se hace añicos | Ventana (rosetón, Tiffany, moderno), Luz (día, atardecer, noche) |
+| **CIRCUITO** | Placa electrónica: la serpiente es una pista de cobre con pulsos de señal y cabeza de chip; muros de circuitos integrados, marcador de 7 segmentos y pantallas LCD; al morir hace cortocircuito | Placa (verde, azul, negra, morada), Pulso (cian, rojo, ámbar) |
 
 ## Cómo jugar
 
@@ -85,7 +88,7 @@ Para agregar un estilo nuevo: crea una clase que herede de `Renderer` en `styles
 
 Fuentes incluidas en `assets/`, cada una con su licencia:
 
-- [Patrick Hand](https://fonts.google.com/specimen/Patrick+Hand), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono), [Orbitron](https://fonts.google.com/specimen/Orbitron), [Rye](https://fonts.google.com/specimen/Rye), [Lilita One](https://fonts.google.com/specimen/Lilita+One): SIL Open Font License.
+- [Patrick Hand](https://fonts.google.com/specimen/Patrick+Hand), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono), [Orbitron](https://fonts.google.com/specimen/Orbitron), [Rye](https://fonts.google.com/specimen/Rye), [Lilita One](https://fonts.google.com/specimen/Lilita+One), [Cinzel](https://fonts.google.com/specimen/Cinzel), [Fredoka](https://fonts.google.com/specimen/Fredoka) (instancia fija SemiBold de la fuente variable): SIL Open Font License.
 - [Chewy](https://fonts.google.com/specimen/Chewy): Apache License 2.0.
 
 ## Licencia
