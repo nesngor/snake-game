@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+*.pyc
+
+# Build web (se genera con pygbag)
+build/
+
+# Récord y opciones guardadas de cada jugador
+record.json
