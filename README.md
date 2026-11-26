@@ -78,3 +78,7 @@ Fuentes incluidas en `assets/`, cada una con su licencia:
 
 - [Patrick Hand](https://fonts.google.com/specimen/Patrick+Hand), [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono), [Orbitron](https://fonts.google.com/specimen/Orbitron), [Rye](https://fonts.google.com/specimen/Rye), [Lilita One](https://fonts.google.com/specimen/Lilita+One): SIL Open Font License.
 - [Chewy](https://fonts.google.com/specimen/Chewy): Apache License 2.0.
+
+## Licencia
+
+El código del juego está bajo la [licencia MIT](LICENSE): puedes usarlo, modificarlo y compartirlo libremente si conservas el aviso de copyright. Las fuentes de `assets/` mantienen sus propias licencias (ver Créditos).
