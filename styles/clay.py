@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, smooth_runs, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, smooth_runs, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96
@@ -299,9 +299,11 @@ class ClayRenderer(Renderer):
         return rect
 
     # ------------------------------------------------------------ serpiente, comida, bonus
-    def draw_snake(self, points, facing, dead=False, squash=0.0):
+    def draw_snake(self, points, facing, dead=False, squash=0.0, tint=None):
         """points: posiciones en px (cabeza primero), cortadas en tramos por los bordes."""
         colors = CLAYS[self.clay_idx][1]
+        if tint:                                                    # rival: plastilina de su color
+            colors = [tint, mix(tint, (255, 255, 255), 0.25)]
         balls = []
         idx = 0
         total = sum(len(run) for run in points)
@@ -476,6 +478,8 @@ class ClayRenderer(Renderer):
                     self.draw_apple(g.food)
                 if g.bonus:
                     self.draw_star(g)
+                for o in others(g):                                 # rivales (modo en linea)
+                    self.draw_snake(self.snake_points(o), o.direction, o.dead, 1.0 if o.dead else 0.0, o.tint)
                 if g.snake:
                     self.draw_snake(self.snake_points(g), g.direction, dead, squash)
                 self.draw_effects()

@@ -26,11 +26,13 @@ from pathlib import Path
 import pygame
 
 from game import Game, MAZES, MODE_NAMES, UP, DOWN, LEFT, RIGHT
+from online import Online
 from styles import STYLES
 from styles.base import WIDTH, HEIGHT
 
 WEB = sys.platform == "emscripten"
 SAVE_FILE = Path(__file__).with_name("record.json")
+ONLINE = "EN LINEA"     # valor extra de MODO: abre el menu de partidas en linea
 
 
 # ---------------------------------------------------------------- guardado
@@ -177,6 +179,8 @@ class App:
                          mode=data.get("mode", "RAPIDO"))
         self.menu_sel = 0
         self.pause_sel = 0      # 0 = CONTINUAR, 1 = MENU PRINCIPAL
+        self.online_mode = data.get("mode") == ONLINE   # MODO = EN LINEA (juega contra otros)
+        self.online = Online(self)
 
     @property
     def renderer(self):
@@ -187,15 +191,15 @@ class App:
 
     def menu_rows(self):
         g = self.game
-        rows = [("ESTILO", self.renderer.NAME), ("NIVEL", str(g.level)), ("MODO", g.mode),
-                ("MAPA", g.maze["name"])]
+        rows = [("ESTILO", self.renderer.NAME), ("NIVEL", str(g.level)),
+                ("MODO", ONLINE if self.online_mode else g.mode), ("MAPA", g.maze["name"])]
         for i, (label, values) in enumerate(self.renderer.OPTIONS):
             rows.append((label, values[self.opt(i)]))
         return rows
 
     def save(self):
         write_save({"record": self.game.record, "level": self.game.level,
-                    "maze": self.game.maze_idx, "mode": self.game.mode,
+                    "maze": self.game.maze_idx, "mode": ONLINE if self.online_mode else self.game.mode,
                     "estilo": self.renderer.KEY, "opts": self.opts})
 
     def change(self, row, step):
@@ -204,8 +208,13 @@ class App:
             self.style_idx = (self.style_idx + step) % len(self.renderers)
         elif row == 1:
             g.level = min(9, max(1, g.level + step))
-        elif row == 2:
-            g.mode = MODE_NAMES[(MODE_NAMES.index(g.mode) + step) % len(MODE_NAMES)]
+        elif row == 2:      # CLASICO, RAPIDO, EXTREMO y EN LINEA
+            modes = MODE_NAMES + [ONLINE]
+            cur = modes.index(ONLINE if self.online_mode else g.mode)
+            new = modes[(cur + step) % len(modes)]
+            self.online_mode = new == ONLINE
+            if not self.online_mode:
+                g.mode = new
         elif row == 3:
             g.maze_idx = (g.maze_idx + step) % len(MAZES)
         else:
@@ -215,7 +224,10 @@ class App:
             vals[k] = (vals[k] + step) % len(values)
         self.save()
 
-    def handle_key(self, key):
+    def handle_key(self, key, unicode=""):
+        if self.online.active:
+            self.online.handle_key(key, unicode)
+            return True
         dirs = {pygame.K_UP: UP, pygame.K_w: UP, pygame.K_DOWN: DOWN, pygame.K_s: DOWN,
                 pygame.K_LEFT: LEFT, pygame.K_a: LEFT, pygame.K_RIGHT: RIGHT, pygame.K_d: RIGHT}
         start_keys = (pygame.K_SPACE, pygame.K_RETURN, pygame.K_KP_ENTER)
@@ -224,7 +236,10 @@ class App:
 
         if g.state == "menu":
             if key in start_keys:
-                g.start()
+                if self.online_mode:
+                    self.online.enter()
+                else:
+                    g.start()
             elif d in (UP, DOWN):
                 self.menu_sel = (self.menu_sel + d[1]) % len(self.menu_rows())
             elif d in (LEFT, RIGHT):
@@ -260,6 +275,9 @@ class App:
 
     # --- gestos tactiles: se traducen a las mismas acciones que el teclado
     def handle_swipe(self, d):
+        if self.online.active:
+            self.online.handle_swipe(d)
+            return
         if self.game.state == "over":
             self.game.to_menu()          # en la pantalla final, deslizar = volver al menu
             return
@@ -267,6 +285,9 @@ class App:
         self.handle_key(key)
 
     def handle_tap(self, x, y):
+        if self.online.active:
+            self.online.handle_tap(x, y)
+            return
         g = self.game
         if g.state == "play":
             self.pause()
@@ -310,20 +331,26 @@ async def main():
             elif event.type == pygame.WINDOWFOCUSLOST:
                 app.pause()             # pausa sola al cambiar de ventana
             elif event.type == pygame.KEYDOWN:
-                running = app.handle_key(event.key)
+                running = app.handle_key(event.key, getattr(event, "unicode", ""))
             else:
                 touch.handle(event, app)
 
-        app.game.update(dt)
-        for ev in app.game.events:
-            sounds.play(ev["type"])
+        online = app.online.active
+        game = app.online.game if online else app.game
+        (app.online if online else app.game).update(dt)
+        for ev in game.events:
+            if not ev.get("rival"):         # en linea solo suena lo tuyo
+                sounds.play(ev["type"])
             app.renderer.on_event(ev)
             if ev["type"] == "record":
                 app.save()
-        app.game.events.clear()
+        game.events.clear()
 
         app.renderer.update(dt)
-        app.renderer.draw(app)
+        if online:
+            app.online.draw(app.renderer)
+        else:
+            app.renderer.draw(app)
         pygame.display.flip()
         await asyncio.sleep(0)   # cede el control al navegador en la version web
 

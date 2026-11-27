@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -212,8 +212,11 @@ class OceanRenderer(Renderer):
                                   False, pts, 3)
 
     # ------------------------------------------------------------ criatura
-    def draw_creature(self, runs_px, direction, dead=False):
+    def draw_creature(self, runs_px, direction, dead=False, tint=None):
         name, bands, spot = CREATURES[self.creature_idx]
+        if tint:                                                  # rival: misma criatura, su color
+            bands = [tint, lerp(tint, (0, 0, 0), 0.25)]
+            spot = lerp(tint, (255, 255, 255), 0.55)
         if dead:
             bands, spot = [(140, 150, 160)], (180, 186, 196)
         pts_all = []
@@ -490,6 +493,9 @@ class OceanRenderer(Renderer):
                 self.draw_chest(g)
             dead = g.state in ("dying", "over")
             blink = g.state == "dying" and (g.state_time // 120) % 2 == 1
+            for o in others(g):                                     # rivales (modo en linea)
+                runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(o)]
+                self.draw_creature(runs, o.direction, o.dead, o.tint)
             if g.snake and not blink:
                 runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(g)]
                 mouth = self.draw_creature(runs, g.direction, dead)

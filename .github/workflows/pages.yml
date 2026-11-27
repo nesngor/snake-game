@@ -32,7 +32,10 @@ jobs:
         run: pip install pygbag==0.9.3
 
       - name: Compilar version web
-        run: python -m pygbag --build --title "Snake" snake
+        # el servidor en linea y sus reglas no van en el juego del navegador
+        run: |
+          rm -rf snake/server snake/versus.py
+          python -m pygbag --build --title "Snake" snake
 
       - uses: actions/configure-pages@v5
 

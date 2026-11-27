@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, smooth_runs, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, smooth_runs, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96
@@ -260,9 +260,11 @@ class VitralRenderer(Renderer):
         self.jewel_cache[key] = s
         return s
 
-    def draw_snake(self, points, facing, dead=False):
+    def draw_snake(self, points, facing, dead=False, tint=None):
         cols = self.colors
         body, stripe = cols[0], cols[1]
+        if tint:                                                    # rival: joyas de su color
+            body, stripe = tint, tint_mix(tint, (255, 255, 255), 0.45)
         if dead:
             body, stripe = shade(body, 0.45), shade(stripe, 0.45)
         total = sum(len(run) for run in points)
@@ -514,6 +516,8 @@ class VitralRenderer(Renderer):
                 self.draw_apple(g.food)
             if g.bonus:
                 self.draw_rosette(g)
+            for o in others(g):                                     # rivales (modo en linea)
+                self.draw_snake(self.snake_points(o), o.direction, o.dead, o.tint)
             if g.snake and g.state != "dying":                      # al morir se hizo añicos
                 self.draw_snake(self.snake_points(g), g.direction, g.state == "over")
             self.apply_light()

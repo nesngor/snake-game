@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, smooth_runs, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, smooth_runs, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96
@@ -251,8 +251,8 @@ class CircuitRenderer(Renderer):
         self.glow.fill((0, 0, 0))
 
     # ------------------------------------------------------------ serpiente = pista con senal
-    def draw_snake(self, runs, facing, dead=False):
-        copper = BURNT if dead else GOLD
+    def draw_snake(self, runs, facing, dead=False, tint=None):
+        copper = BURNT if dead else (mix(tint, GOLD, 0.25) if tint else GOLD)   # rival: pista de su color
         for run in runs:
             if len(run) > 1:
                 pygame.draw.lines(self.canvas, shade(copper, 0.55), False, run, 20)
@@ -516,6 +516,8 @@ class CircuitRenderer(Renderer):
             if g.bonus:
                 self.draw_battery(g)
             dead = g.state in ("dying", "over")
+            for o in others(g):                                     # rivales (modo en linea)
+                self.draw_snake(self.snake_runs(o), o.direction, o.dead, o.tint)
             if g.snake:
                 self.draw_snake(self.snake_runs(g), g.direction, dead)
             self.draw_effects()

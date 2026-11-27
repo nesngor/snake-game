@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -223,7 +223,7 @@ class MuertosRenderer(Renderer):
             pygame.draw.line(c, INK, (x, my - 2 * s), (x, my + 2 * s), max(1, int(s)))
 
     # ------------------------------------------------------------ alebrije
-    def draw_alebrije(self, runs_px, direction, dead=False):
+    def draw_alebrije(self, runs_px, direction, dead=False, tint=None):
         pts = [p for run in runs_px for p in run]
         n = len(pts)
         radii = [12 - 4 * i / max(1, n - 1) for i in range(n)]
@@ -234,6 +234,8 @@ class MuertosRenderer(Renderer):
                 pygame.draw.line(self.canvas, INK, a, b, 22)
         for i in range(n - 1, 0, -1):
             col = FIESTA_COLORS[i % len(FIESTA_COLORS)]
+            if tint:                                        # rival: alebrije de su color
+                col = lerp(col, tint, 0.7)
             if dead:
                 col = lerp(col, (120, 110, 130), 0.75)
             x, y = pts[i]
@@ -462,6 +464,9 @@ class MuertosRenderer(Renderer):
                 self.draw_veladora(g)
             dead = g.state in ("dying", "over")
             blink = g.state == "dying" and (g.state_time // 120) % 2 == 1
+            for o in others(g):                                # rivales (modo en linea)
+                runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(o)]
+                self.draw_alebrije(runs, o.direction, o.dead, o.tint)
             if g.snake and not blink:
                 runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(g)]
                 self.draw_alebrije(runs, g.direction, dead)

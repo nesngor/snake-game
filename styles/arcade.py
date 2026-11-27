@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H
 from styles.nokia import FONT
 
 LW, LH = 320, 192
@@ -132,7 +132,7 @@ class ArcadeRenderer(Renderer):
         self.floaters = [f for f in self.floaters if f[3] > 0]
 
     # ------------------------------------------------------------ sprites
-    def draw_snake(self, surf, cells, direction, origin=(FX, FY), flash=None):
+    def draw_snake(self, surf, cells, direction, origin=(FX, FY), flash=None, tint=None):
         ox, oy = origin
         n = len(cells)
         for i, (c, r) in enumerate(cells):
@@ -140,6 +140,9 @@ class ArcadeRenderer(Renderer):
             if flash:
                 col = flash
                 inner = flash
+            elif tint:                                      # rival (modo en linea)
+                light, dark = tint_mix(tint, (255, 255, 255), 0.4), tint_mix(tint, (0, 0, 0), 0.45)
+                col, inner = (light, tint) if i == 0 or i % 2 == 0 else (tint, dark)
             elif i == 0:
                 col, inner = YELLOW, (255, 170, 0)
             else:
@@ -217,6 +220,8 @@ class ArcadeRenderer(Renderer):
                       (FX + g.bonus[0] * CELL + 2, FY + g.bonus[1] * CELL + 1 + bob))
             frac = g.bonus_left / BONUS_TICKS
             surf.fill(CYAN, (FX + g.bonus[0] * CELL + 2, FY + g.bonus[1] * CELL + 10, int(16 * frac), 1))
+        for o in others(g):                                 # rivales (modo en linea)
+            self.draw_snake(surf, o.snake, o.direction, flash=(110, 110, 125) if o.dead else None, tint=o.tint)
         if g.snake:
             flash = None
             if g.state in ("dying", "over"):

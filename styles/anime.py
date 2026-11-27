@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -193,9 +193,10 @@ class AnimeRenderer(Renderer):
         self.alpha.fill((0, 0, 0, 0))
 
     # ------------------------------------------------------------ serpiente
-    def draw_snake(self, runs_px, direction, dead=False):
+    def draw_snake(self, runs_px, direction, dead=False, tint=None):
         th = self.th
-        body = lerp(th["snake"], (200, 200, 210), 0.6) if dead else th["snake"]
+        base = tint or th["snake"]
+        body = lerp(base, (200, 200, 210), 0.6) if dead else base
         line = th["line"]
         pts = [p for run in runs_px for p in run]
         n = len(pts)
@@ -462,6 +463,9 @@ class AnimeRenderer(Renderer):
                 self.draw_star(g)
             dead = g.state in ("dying", "over")
             blink = g.state == "dying" and (g.state_time // 120) % 2 == 1
+            for o in others(g):                                # rivales (modo en linea)
+                runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(o)]
+                self.draw_snake(runs, o.direction, o.dead, o.tint)
             if g.snake and not blink:
                 runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(g)]
                 self.draw_snake(runs, g.direction, dead)

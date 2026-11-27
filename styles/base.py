@@ -17,9 +17,27 @@ Datos utiles dentro de draw(app):
   pause_items(app)     opciones del menu de pausa (CONTINUAR / MENU PRINCIPAL)
   self.mark_pause(i, y) llamalo al dibujar cada opcion de pausa (y = centro en px de
                        pantalla) para que en el celular se pueda tocar
+  others(app.game)     serpientes rivales del modo EN LINEA: dibujalas igual que la
+                       tuya pero con su color (o.tint), ver RIVAL_COLORS
 """
 
 WIDTH, HEIGHT = 960, 576   # tamano de ventana comun a todos los estilos
+
+# Modo EN LINEA: tu serpiente conserva el aspecto del estilo y las rivales usan estos
+# colores (cada estilo los adapta a su manera). app.game.others trae las rivales:
+# objetos con .snake, .direction, .dead, .tint (color o None = tu serpiente eliminada),
+# .k (1..3, para estilos sin color como NOKIA) y .move_fraction() (sirve con smooth_runs).
+RIVAL_COLORS = [(236, 64, 84), (58, 136, 250), (250, 196, 40)]
+RIVAL_NAMES = ["ROJA", "AZUL", "AMARILLA"]
+
+
+def others(g):
+    """Serpientes rivales de la partida en linea (vacio en el juego normal)."""
+    return getattr(g, "others", ())
+
+
+def tint_mix(a, b, t):
+    return tuple(int(x + (y - x) * t) for x, y in zip(a, b))
 
 
 def smooth_runs(g):

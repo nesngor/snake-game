@@ -1,3 +1,5 @@
 pygame-ce>=2.5
+# Para jugar EN LINEA desde la PC (en el navegador no hace falta):
+websockets>=14
 # Solo para generar la versión web:
 pygbag

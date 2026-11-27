@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, RIGHT
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96
@@ -251,13 +251,13 @@ class PaperRenderer(Renderer):
         return surf
 
     # ------------------------------------------------------------ serpiente
-    def draw_snake(self, runs, facing, dead=False):
+    def draw_snake(self, runs, facing, dead=False, tint=None):
         """runs: listas de puntos (cabeza primero) separadas donde cruza el borde."""
         pal = self.pal
         rnd = self.rnd(3)
         surf = self.canvas
         total = sum(len(r) for r in runs)
-        fill = self.sheet["paper"] if dead else pal["snake"]
+        fill = self.sheet["paper"] if dead else (tint or pal["snake"])     # rival: coloreada de su color
         idx = 0
         layers = []
         for run in runs:
@@ -494,6 +494,8 @@ class PaperRenderer(Renderer):
                 self.draw_star(g)
             dead = g.state in ("dying", "over")
             blink = g.state == "dying" and (g.state_time // 120) % 2 == 1
+            for o in others(g):                                     # rivales (modo en linea)
+                self.draw_snake(self.snake_runs(o), o.direction, o.dead, o.tint)
             if g.snake and not blink:
                 self.draw_snake(self.snake_runs(g), g.direction, dead)
             self.draw_effects()

@@ -7,7 +7,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, FOODS_PER_STAGE, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H
 
 ASSETS = Path(__file__).resolve().parent.parent / "assets"
 CELL = 30
@@ -278,22 +278,25 @@ class DevRenderer(Renderer):
                                                                    rect.top + dr * CELL + CELL / 2)))
                 self.squiggle(rect.left + 2, rect.top + dr * CELL + CELL - 5, rect.w - 4, th["warn"])
 
-    def draw_snake(self, g, dead):
+    def draw_snake(self, g, dead, cells=None, direction=None, tint=None):
+        """cells/direction/tint: para dibujar una rival del modo en linea en vez de tu serpiente."""
         th = self.th
         chars = self.code_chars()
-        n = len(g.snake)
-        sel = th["err"] if dead else th["sel"]
+        snake = cells or g.snake
+        direction = direction or g.direction
+        n = len(snake)
+        sel = th["err"] if dead else (tint_mix(th["bg"], tint, 0.55) if tint else th["sel"])
         sel = tuple(int(a * 0.35 + b * 0.65) for a, b in zip(sel, th["bg"])) if dead else sel
-        for i, (c, r) in enumerate(g.snake):                 # fondo "seleccionado"
+        for i, (c, r) in enumerate(snake):                   # fondo "seleccionado"
             rect = pygame.Rect(FX + c * CELL + 1, FY + r * CELL + 3, CELL - 2, CELL - 6)
             if i + 1 < n:
-                nc, nr = g.snake[i + 1]
+                nc, nr = snake[i + 1]
                 if nr == r and abs(nc - c) == 1:
                     rect.union_ip(rect.move((nc - c) * CELL, 0))
                 elif nc == c and abs(nr - r) == 1:
                     rect.union_ip(rect.move(0, (nr - r) * CELL))
             self.canvas.fill(sel, rect)
-        for i, (c, r) in enumerate(g.snake[1:], start=1):   # cuerpo = codigo
+        for i, (c, r) in enumerate(snake[1:], start=1):     # cuerpo = codigo
             # anclado a la cola: se lee bien y al crecer "teclea" el siguiente caracter
             ch, kind = chars[(n - 1 - i) % len(chars)]
             col = th["err"] if dead else th[kind]
@@ -303,10 +306,10 @@ class DevRenderer(Renderer):
             if dead:
                 self.squiggle(cx - CELL / 2 + 2, cy + 10, CELL - 4, th["err"])
         # cabeza = cursor
-        hc, hr = g.snake[0]
+        hc, hr = snake[0]
         rect = pygame.Rect(FX + hc * CELL + 2, FY + hr * CELL + 2, CELL - 4, CELL - 4)
-        arrow = {RIGHT: ">", LEFT: "<", UP: "^", DOWN: "v"}[g.direction]
-        cursor = th["err"] if dead else th["text"]
+        arrow = {RIGHT: ">", LEFT: "<", UP: "^", DOWN: "v"}[direction]
+        cursor = th["err"] if dead else (tint or th["text"])
         if int(self.t * 2.5) % 2 == 0 or dead:
             self.canvas.fill(cursor, rect)
             img = self.glyph(arrow, th["bg"])
@@ -352,6 +355,8 @@ class DevRenderer(Renderer):
             self.squiggle(fx - 12, fy + 13, 24, th["err"])
         if g.bonus:
             self.draw_coffee(g)
+        for o in others(g):                                  # rivales (modo en linea)
+            self.draw_snake(g, o.dead, o.snake, o.direction, o.tint)
         if g.snake and not (g.state == "dying" and (g.state_time // 120) % 2 == 1):
             self.draw_snake(g, dead)
         self.draw_minimap(g)

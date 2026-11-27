@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, pause_items, WIDTH, HEIGHT
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH, HEIGHT
 from styles.nokia import FONT
 
 LW, LH = 240, 144
@@ -185,8 +185,10 @@ class PixelRenderer(Renderer):
         return self.wall_cache[key]
 
     # ------------------------------------------------------------ serpiente
-    def draw_snake(self, target, cells, direction, origin=(FX, FY), dead=False):
+    def draw_snake(self, target, cells, direction, origin=(FX, FY), dead=False, tint=None):
         bands = SNAKES[self.snake_idx][1]
+        if tint:                                                 # rival (modo en linea)
+            bands = [tint, shade(tint, 0.75)]
         if dead:
             bands = [(120, 120, 130), (90, 90, 100)]
         layer = self.layer
@@ -304,6 +306,8 @@ class PixelRenderer(Renderer):
             frac = g.bonus_left / BONUS_TICKS                     # barra de tiempo
             surf.fill(OUTLINE, (x - 1, y + 9, 15, 3))
             surf.fill(CROWN_COLORS["y"], (x, y + 10, max(1, int(13 * frac)), 1))
+        for o in others(g):                                       # rivales (modo en linea)
+            self.draw_snake(surf, o.snake, o.direction, dead=o.dead, tint=o.tint)
         if show_snake and g.snake:
             self.draw_snake(surf, g.snake, g.direction, dead=g.state in ("dying", "over"))
         for x, y, _, _, life, col in self.particles:

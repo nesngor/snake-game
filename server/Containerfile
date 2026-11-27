@@ -1,0 +1,21 @@
+# Servidor del Snake EN LINEA.
+# Se construye desde la raiz del repo (usa game.py y versus.py):
+#   podman build -f server/Containerfile -t snake-server .
+#   podman run -d --name snake-server --network <red-del-sitio> --restart=always snake-server
+FROM docker.io/library/python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    SNAKE_HOST=0.0.0.0 \
+    SNAKE_PORT=8765
+
+WORKDIR /app
+COPY server/requirements.txt server/requirements.txt
+RUN pip install --no-cache-dir -r server/requirements.txt
+
+COPY game.py versus.py ./
+COPY server/snake_server.py server/
+
+USER nobody
+EXPOSE 8765
+CMD ["python", "server/snake_server.py"]

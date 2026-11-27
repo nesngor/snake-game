@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, MAZES, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H
 
 HUD_H = 64                     # espacio arriba para el marcador
 RING = 0.4                     # grosor del muro perimetral
@@ -200,9 +200,11 @@ class Cube3DRenderer(Renderer):
         return bg, front
 
     # ------------------------------------------------------------ objetos dinamicos
-    def snake_items(self, cells, prev_cells, direction, frac, dead=False):
+    def snake_items(self, cells, prev_cells, direction, frac, dead=False, tint=None):
         """Devuelve [(profundidad, funcion_dibujar)] para cada segmento, interpolando."""
         th = self.th
+        if tint:                                  # rival (modo en linea): cubos de su color
+            th = {**th, "head": lerp(tint, (255, 255, 255), 0.2), "tail": lerp(tint, (0, 0, 0), 0.4)}
         n = len(cells)
         items = []
         positions = []
@@ -431,6 +433,9 @@ class Cube3DRenderer(Renderer):
                 self.floor_shadow(self.shadow, c, world_y(r), c + 1, world_y(r) + 1)
         if show_snake and snake:
             items += self.snake_items(snake, prev, direction, frac, dead)
+        for o in others(game) if game else ():     # rivales (modo en linea)
+            items += self.snake_items(o.snake, o.snake[1:] + o.snake[-1:], o.direction,
+                                      o.move_fraction(), o.dead, o.tint)
         if food:
             items.append(self.food_item(food))
         if game and game.bonus:

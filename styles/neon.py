@@ -6,7 +6,7 @@ import random
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H
 
 CELL = 32
 FX, FY = 32, 96                 # esquina del tablero
@@ -196,13 +196,14 @@ class NeonRenderer(Renderer):
             pygame.draw.rect(self.canvas, fill, rect, 0, 6)
             self.rect(th["wall"], rect, width=3, radius=6)
 
-    def draw_snake(self, cells, direction, pos_of=center, seg=None):
+    def draw_snake(self, cells, direction, pos_of=center, seg=None, tint=None):
         th = self.th
         n = len(cells)
         seg = seg or CELL - 8
         thick = seg - 6
+        head, tail = (tint, lerp(tint, (0, 0, 0), 0.55)) if tint else (th["head"], th["tail"])
         for i in range(n - 1, -1, -1):          # de la cola a la cabeza
-            col = lerp(th["head"], th["tail"], i / max(1, n - 1))
+            col = lerp(head, tail, i / max(1, n - 1))
             x, y = pos_of(*cells[i])
             if i > 0:                             # union con el segmento de adelante
                 px, py = pos_of(*cells[i - 1])
@@ -269,6 +270,8 @@ class NeonRenderer(Renderer):
             self.draw_food(g.food)
         if g.bonus:
             self.draw_bonus(g)
+        for o in others(g):                     # rivales (modo en linea); eliminadas, en gris
+            self.draw_snake(o.snake, o.direction, tint=(80, 80, 96) if o.dead else o.tint)
         if show_snake and g.snake:
             self.draw_snake(g.snake, g.direction)
         self.draw_effects()

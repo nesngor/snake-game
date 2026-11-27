@@ -8,7 +8,7 @@ from pathlib import Path
 import pygame
 
 from game import COLS, ROWS, BONUS_TICKS
-from styles.base import Renderer, pause_items, WIDTH as W, HEIGHT as H, smooth_runs
+from styles.base import Renderer, pause_items, others, tint_mix, WIDTH as W, HEIGHT as H, smooth_runs
 
 CELL = 32
 FX, FY = 32, 96
@@ -248,7 +248,14 @@ class SpaceRenderer(Renderer):
             return (int(r * 255), int(g * 255), int(b * 255))
         return gradient(stops, t)
 
-    def draw_comet(self, runs_px, dead=False):
+    def draw_comet(self, runs_px, dead=False, tint=None):
+        if tint:                                                    # rival: cometa de su color
+            own = self.comet_color
+            self.comet_color = lambda t: lerp(lerp(tint, (255, 255, 255), 0.35), scale_c(tint, 0.35), t)
+            try:
+                return self.draw_comet(runs_px, dead)
+            finally:
+                self.comet_color = own
         pts = [p for run in runs_px for p in run]
         n = len(pts)
         for run in runs_px:                                         # estela continua
@@ -454,6 +461,9 @@ class SpaceRenderer(Renderer):
             if g.bonus:
                 self.draw_supernova(g)
             dead = g.state in ("dying", "over")
+            for o in others(g):                                     # rivales (modo en linea)
+                runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(o)]
+                self.draw_comet(runs, o.dead, o.tint)
             if g.snake and g.state != "dying":
                 runs = [[cell_center(c, r) for c, r in run] for run in smooth_runs(g)]
                 self.draw_comet(runs, dead)

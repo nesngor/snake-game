@@ -3,7 +3,7 @@
 import pygame
 
 from game import COLS, ROWS, UP, DOWN, LEFT, RIGHT
-from styles.base import Renderer, pause_items
+from styles.base import Renderer, pause_items, others, tint_mix
 
 LOGICAL_W, LOGICAL_H = 120, 72
 SCALE = 8
@@ -120,8 +120,8 @@ class NokiaRenderer(Renderer):
         self.screen.blit(self.overlay, (0, 0))
 
     # --- piezas
-    def draw_snake(self, surf, cells, direction, origin=(FIELD_X, FIELD_Y)):
-        style = self.snake_style
+    def draw_snake(self, surf, cells, direction, origin=(FIELD_X, FIELD_Y), style=None):
+        style = style or self.snake_style
         ox, oy = origin
 
         def px(c, r):
@@ -196,6 +196,12 @@ class NokiaRenderer(Renderer):
             draw_pattern(surf, [".#.", "#.#", ".#."], *cell_px(*g.food))
         if g.bonus:
             draw_pattern(surf, BUG, *cell_px(*g.bonus))
+        # rivales (modo en linea): la pantalla es de un solo color, asi que cada una
+        # usa otra forma de serpiente; las eliminadas parpadean
+        alt = [s for s in SNAKE_STYLES if s != self.snake_style]
+        for o in others(g):
+            if not o.dead or pygame.time.get_ticks() // 150 % 2 == 0:
+                self.draw_snake(surf, o.snake, o.direction, style=alt[(o.k - 1) % len(alt)] if o.k else None)
         if show_snake and g.snake:
             self.draw_snake(surf, g.snake, g.direction)
 
