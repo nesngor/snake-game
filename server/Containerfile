@@ -14,7 +14,7 @@ COPY server/requirements.txt server/requirements.txt
 RUN pip install --no-cache-dir -r server/requirements.txt
 
 COPY game.py versus.py ./
-COPY server/snake_server.py server/
+COPY server/snake_server.py server/plataforma.py server/
 
 USER nobody
 EXPOSE 8765

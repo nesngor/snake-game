@@ -128,3 +128,14 @@ Fuentes incluidas en `assets/`, cada una con su licencia:
 ## Licencia
 
 El código del juego está bajo la [licencia MIT](LICENSE): puedes usarlo, modificarlo y compartirlo libremente si conservas el aviso de copyright. Las fuentes de `assets/` mantienen sus propias licencias (ver Créditos).
+
+## Plataforma de Lyness (cuentas, medallas y estilos de pago)
+
+En lyness-gaming.com el juego usa la sesión del sitio: los estilos que no son gratis (Nokia, Neón, Pixel, Papel y Arcade lo son) se desbloquean con monedas desde el panel, y las partidas cuentan para medallas y misiones diarias. Sin sesión se juega como invitado, sin premios. En la PC todo está disponible.
+
+El servidor en línea avisa a la plataforma quién ganó. Para eso necesita dos variables de entorno (sin ellas funciona igual, pero sin premios):
+
+```
+PLATAFORMA_URL=http://backend-piercinghell:8000
+PLATAFORMA_CLAVE=<la misma clave que el backend tiene en PLATAFORMA_CLAVES=snake:...>
+```

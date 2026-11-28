@@ -38,6 +38,8 @@ class Snake:
         self.alive = True
         self.grow = 0
         self.score = 0
+        self.eats = 0             # comidas y bonus de la ronda (para las estadisticas de la plataforma)
+        self.bonuses = 0
 
     def to_json(self):
         return {"id": self.pid, "body": self.body, "dir": self.direction,
@@ -159,6 +161,7 @@ class Versus:
             s.body.insert(0, head)
             if s.pid in eating:
                 s.score += EAT_POINTS
+                s.eats += 1
                 self.events.append({"type": "eat", "id": s.pid, "pos": head})
             elif s.grow:
                 s.grow -= 1
@@ -175,6 +178,7 @@ class Versus:
             taker = next((s for s in self.snakes.values() if s.alive and s.body[0] in self.bonus_cells()), None)
             if taker:
                 taker.score += BONUS_POINTS
+                taker.bonuses += 1
                 taker.grow += 2
                 self.events.append({"type": "bonus", "id": taker.pid, "pos": self.bonus,
                                     "points": BONUS_POINTS})

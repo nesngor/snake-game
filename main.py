@@ -27,6 +27,7 @@ import pygame
 
 from game import Game, MAZES, MODE_NAMES, UP, DOWN, LEFT, RIGHT
 from online import Online
+from plat import Plataforma
 from styles import STYLES
 from styles.base import WIDTH, HEIGHT
 
@@ -180,7 +181,31 @@ class App:
         self.menu_sel = 0
         self.pause_sel = 0      # 0 = CONTINUAR, 1 = MENU PRINCIPAL
         self.online_mode = data.get("mode") == ONLINE   # MODO = EN LINEA (juega contra otros)
+        self.plat = Plataforma()      # sesion de Lyness: estilos desbloqueados, medallas y misiones
         self.online = Online(self)
+        self.aviso_ms = 0             # resalta el aviso de estilo bloqueado al intentar jugar
+        self.solo = {"comidas": 0, "mapas": 0}   # lo hecho en la partida en solitario en curso
+        self.prev_state = "menu"
+
+    @property
+    def bloqueado(self):
+        """True si el estilo elegido aun no se tiene (se puede ver en el menu, pero no jugar con el)."""
+        return not self.plat.desbloqueado(self.renderer.KEY)
+
+    def seguir_solitario(self, eventos):
+        """Lleva la cuenta de la partida en solitario y la reporta a la plataforma al terminar."""
+        g = self.game
+        for ev in eventos:
+            if ev["type"] == "eat":
+                self.solo["comidas"] += 1
+            elif ev["type"] == "stage":
+                self.solo["mapas"] += 1
+        if g.state == "play" and self.prev_state in ("menu", "over"):
+            self.solo = {"comidas": 0, "mapas": 0}          # partida nueva
+        if g.state == "over" and self.prev_state == "dying":
+            self.plat.reportar_solitario({"partidas": 1, "comidas": self.solo["comidas"],
+                                          "mapas_superados": self.solo["mapas"], "mejor_puntaje": g.score})
+        self.prev_state = g.state
 
     @property
     def renderer(self):
@@ -236,7 +261,9 @@ class App:
 
         if g.state == "menu":
             if key in start_keys:
-                if self.online_mode:
+                if self.bloqueado:
+                    self.aviso_ms = 900          # no se juega con un estilo que no se tiene
+                elif self.online_mode:
                     self.online.enter()
                 else:
                     g.start()
@@ -338,6 +365,10 @@ async def main():
         online = app.online.active
         game = app.online.game if online else app.game
         (app.online if online else app.game).update(dt)
+        app.plat.update()
+        app.aviso_ms = max(0, app.aviso_ms - dt)
+        if not online:
+            app.seguir_solitario(game.events)
         for ev in game.events:
             if not ev.get("rival"):         # en linea solo suena lo tuyo
                 sounds.play(ev["type"])
@@ -351,6 +382,8 @@ async def main():
             app.online.draw(app.renderer)
         else:
             app.renderer.draw(app)
+            if game.state == "menu" and app.bloqueado:
+                app.online.draw_lock(screen, app)
         pygame.display.flip()
         await asyncio.sleep(0)   # cede el control al navegador en la version web
 

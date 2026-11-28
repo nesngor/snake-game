@@ -197,6 +197,11 @@ class Online:
         t = m.get("t")
         if t == "hello":
             self.me = m.get("you")
+            self.nick = None
+            if self.app.plat.token:          # con sesion de Lyness: la partida cuenta para medallas y misiones
+                self.send({"t": "auth", "token": self.app.plat.token})
+        elif t == "auth":
+            self.nick = str(m.get("nick") or "") if m.get("ok") else None
         elif t == "error":
             self.say(str(m.get("msg", "ERROR")))
             if self.screen == "wait":
@@ -500,9 +505,33 @@ class Online:
             pygame.draw.rect(screen, WARN, box, 2, border_radius=14)
             self.text(screen, self.toast, 24, TEXT, center=box.center)
 
+    def draw_lock(self, surf, app):
+        """Aviso sobre el menu cuando el estilo elegido esta bloqueado."""
+        fuerte = app.aviso_ms > 0 and int(app.aviso_ms / 110) % 2 == 0
+        if app.plat.invitado:
+            linea = "INICIA SESIÓN EN LYNESS-GAMING.COM PARA DESBLOQUEARLO"
+        elif app.plat.token and app.plat.estilos is None:
+            linea = "REVISANDO TUS ESTILOS..."
+        else:
+            linea = "CONSÍGUELO CON MONEDAS EN TU PANEL DE LYNESS"
+        box = pygame.Rect(0, 0, 640, 66)
+        box.midbottom = (W // 2, H - 10)
+        fondo = pygame.Surface(box.size, pygame.SRCALPHA)
+        pygame.draw.rect(fondo, (40, 14, 18, 240) if fuerte else (14, 16, 28, 236), fondo.get_rect(), border_radius=16)
+        surf.blit(fondo, box)
+        pygame.draw.rect(surf, WARN if fuerte else (250, 204, 21), box, 3, border_radius=16)
+        self.text(surf, "ESTILO BLOQUEADO", 24, (250, 204, 21), center=(W // 2, box.top + 22))
+        self.text(surf, linea, 17, TEXT, center=(W // 2, box.top + 47))
+
     def status_line(self, surf, y):
         if self.connected:
-            self.text(surf, "CONECTADO", 20, ACCENT, center=(W // 2, y))
+            if getattr(self, "nick", None):
+                estado = f"CONECTADO COMO {self.nick.upper()}"
+            elif self.app.plat.web:
+                estado = "CONECTADO COMO INVITADO · SIN PREMIOS"
+            else:
+                estado = "CONECTADO"
+            self.text(surf, estado, 18 if len(estado) > 30 else 20, ACCENT, center=(W // 2, y))
         elif self.net and self.net.status == "connecting":
             dots = "." * (int(self.t * 3) % 4)
             self.text(surf, "CONECTANDO" + dots, 20, DIM, center=(W // 2, y))

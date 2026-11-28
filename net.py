@@ -130,3 +130,87 @@ class DesktopNet:
 def connect(url=None):
     url = url or server_url()
     return WebNet(url) if WEB else DesktopNet(url)
+
+
+# ---------------------------------------------------------------- plataforma de Lyness (solo web)
+API_BASE = "https://piercinghell.lyness-gaming.com"
+
+_JS_SESION = """
+(function () {
+  try {
+    var s = JSON.parse(localStorage.getItem("lyness.session") || "null");
+    return s && s.token && s.expiresAt > Date.now() ? s.token : "";
+  } catch (e) { return ""; }
+})()
+"""
+
+_JS_API = """
+window.snakeApi = window.snakeApi || {
+  q: [],
+  call(id, method, url, token, body) {
+    const h = {};
+    if (token) h["Authorization"] = "Bearer " + token;
+    if (body) h["Content-Type"] = "application/json";
+    fetch(url, { method: method, headers: h, body: body || undefined })
+      .then((r) => r.json().then((j) => ({ status: r.status, body: j }), () => ({ status: r.status, body: null })))
+      .catch(() => ({ status: 0, body: null }))
+      .then((res) => this.q.push(JSON.stringify({ id: id, status: res.status, body: res.body })));
+  },
+  poll() { const s = "[" + this.q.join(",") + "]"; this.q = []; return s; }
+};
+"""
+
+
+def session_token():
+    """Token de la sesión que guarda el sitio de Lyness al entrar al panel ("" si no hay).
+    Solo existe en la web y cuando el juego se sirve desde el mismo dominio que el sitio."""
+    if not WEB:
+        return os.environ.get("LYNESS_TOKEN", "")      # solo para pruebas en la PC
+    try:
+        import platform
+        return str(platform.window.eval(_JS_SESION) or "")
+    except Exception:
+        return ""
+
+
+def api_base():
+    """Dirección del backend; para pruebas se cambia con localStorage["lyness.api"] = "http://..."."""
+    if not WEB:
+        return API_BASE
+    try:
+        import platform
+        otra = str(platform.window.eval("localStorage.getItem('lyness.api') || ''"))
+        return otra.rstrip("/") or API_BASE
+    except Exception:
+        return API_BASE
+
+
+class Api:
+    """Llamadas HTTP al backend desde el navegador, sin bloquear el juego.
+
+        api.call("GET", "/ruta", token, None, al_responder)   # al_responder(status, body)
+        api.update()                                           # en cada fotograma
+    """
+
+    def __init__(self):
+        import platform
+        platform.window.eval(_JS_API)
+        self.js = platform.window.snakeApi
+        self.base = api_base()
+        self.pendientes = {}
+        self.siguiente = 0
+
+    def call(self, method, path, token=None, body=None, callback=None):
+        self.siguiente += 1
+        self.pendientes[self.siguiente] = callback
+        self.js.call(self.siguiente, method, self.base + path, token or "", json.dumps(body) if body is not None else "")
+
+    def update(self):
+        try:
+            respuestas = json.loads(str(self.js.poll()))
+        except ValueError:
+            return
+        for r in respuestas:
+            callback = self.pendientes.pop(r.get("id"), None)
+            if callback:
+                callback(r.get("status", 0), r.get("body"))

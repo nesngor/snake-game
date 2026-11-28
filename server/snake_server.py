@@ -18,6 +18,7 @@ Mensajes (JSON). Del jugador al servidor:
     {"t": "join", "code": "ABCD"}               entrar a una sala
     {"t": "start"}                              el anfitrion empieza la ronda
     {"t": "turn", "d": [1, 0]}                  girar
+    {"t": "auth", "token": "..."}               sesion de Lyness (para medallas y misiones)
     {"t": "leave"}                              salir de la sala
 Del servidor al jugador:
     {"t": "room", ...}     quien esta en la sala y en que estado
@@ -25,6 +26,10 @@ Del servidor al jugador:
     {"t": "state", ...}    tablero en cada paso, con los eventos (comer, morir...)
     {"t": "over", ...}     fin de la ronda: ganador y puntos
     {"t": "error", "msg"}  algo salio mal (sala llena, codigo invalido...)
+    {"t": "auth", ...}     respuesta a la sesion: {"ok": true, "nick": "..."} o {"ok": false}
+
+Con PLATAFORMA_URL y PLATAFORMA_CLAVE (ver plataforma.py) cada ronda entre jugadores con
+sesion se reporta a la plataforma de Lyness; sin ellas todo funciona igual, sin premios.
 """
 
 import asyncio
@@ -42,6 +47,7 @@ from websockets.exceptions import ConnectionClosed
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from game import MAZES                                     # noqa: E402
 from versus import Versus, MAX_PLAYERS, tick_ms            # noqa: E402
+import plataforma                                          # noqa: E402
 
 log = logging.getLogger("snake")
 
@@ -60,6 +66,8 @@ class Player:
         self.pid = pid
         self.room = None
         self.msg_times = []
+        self.account = None        # id de la cuenta de Lyness (None = invitado)
+        self.nick = None
 
     def flooding(self):
         now = time.monotonic()
@@ -130,6 +138,11 @@ def make_room(quick, maze_idx, level):
     return room
 
 
+def misma_cuenta(p, room):
+    """True si esa cuenta ya esta en la sala (no se vale jugar contra uno mismo por los premios)."""
+    return p.account is not None and any(q.account == p.account for q in room.players if q is not p)
+
+
 def join(p, room):
     leave(p)
     room.players.append(p)
@@ -167,6 +180,7 @@ async def run_round(room):
         if room.quick:
             room.maze_idx = random.randrange(len(MAZES))
         pids = [p.pid for p in room.players]
+        cuentas = {p.pid: p.account for p in room.players if p.account is not None}   # quien tiene sesion
         game = room.game = Versus(pids, room.maze_idx)
         ms = tick_ms(room.level)
         room.state = "countdown"
@@ -190,6 +204,7 @@ async def run_round(room):
         room.last_winner = game.winner
         room.send_all({"t": "over", "winner": game.winner,
                        "scores": {s.pid: s.score for s in game.snakes.values()}})
+        reportar_ronda(room, game, cuentas)
         await asyncio.sleep(RESULTS_S)
     except asyncio.CancelledError:
         return
@@ -201,6 +216,20 @@ async def run_round(room):
     if room.quick and len(room.players) >= 2:
         room.auto_start_at = time.monotonic() + QUICK_WAIT_S
     room.announce()
+
+
+def reportar_ronda(room, game, cuentas):
+    """Manda a la plataforma lo que hizo cada jugador con sesion (en segundo plano)."""
+    if not cuentas or len(game.snakes) < 2:
+        return
+    jugadores = []
+    for s in game.snakes.values():
+        if s.pid in cuentas:
+            jugadores.append({"id_account": cuentas[s.pid], "stats": {
+                "partidas_online": 1, "victorias_online": 1 if game.winner == s.pid else 0,
+                "comidas_online": s.eats, "bonus_online": s.bonuses}})
+    ref = f"{room.code}-{int(time.time() * 1000)}"
+    asyncio.ensure_future(plataforma.reportar(ref, jugadores))
 
 
 def start_round(room):
@@ -236,9 +265,16 @@ async def handle(p, msg):
     if t == "turn":
         if room and room.game and room.state == "play":
             room.game.turn(p.pid, msg.get("d"))
+    elif t == "auth":
+        if room is None and p.account is None:      # solo antes de entrar a una sala
+            datos = await plataforma.sesion(msg.get("token"))
+            if datos:
+                p.account, p.nick = datos.get("id_account"), str(datos.get("nickname") or "")[:16]
+            await safe_send(p, {"t": "auth", "ok": bool(datos), "nick": p.nick})
     elif t == "quick":
         target = next((r for r in rooms.values()
-                       if r.quick and r.state == "lobby" and len(r.players) < MAX_PLAYERS), None)
+                       if r.quick and r.state == "lobby" and len(r.players) < MAX_PLAYERS
+                       and not misma_cuenta(p, r)), None)
         target = target or make_room(True, 0, QUICK_LEVEL)
         if target:
             join(p, target)
@@ -260,6 +296,8 @@ async def handle(p, msg):
             await safe_send(p, {"t": "error", "msg": "LA SALA ESTÁ LLENA"})
         elif target.state != "lobby":
             await safe_send(p, {"t": "error", "msg": "ESA SALA ESTÁ JUGANDO, ESPERA UN MOMENTO"})
+        elif misma_cuenta(p, target):
+            await safe_send(p, {"t": "error", "msg": "YA ESTÁS EN ESA SALA CON TU CUENTA"})
         else:
             join(p, target)
     elif t == "start":
